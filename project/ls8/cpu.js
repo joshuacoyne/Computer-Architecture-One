@@ -65,14 +65,18 @@ class CPU {
     }
     
     //handler methods
-    PUSH() {
+    PUSH(item) {
         this.reg[7]--;
-        this.ram[this.reg[7]] = this.reg[this.operandA];
+        if (item)
+            this.ram[this.reg[7]] = item;
+        else
+            this.ram[this.reg[7]] = this.reg[this.operandA];
     }
 
     POP() {
         this.reg[this.operandA] = this.ram[this.reg[7]];
-        this.reg[7]++; 
+        
+        return this.ram[this.reg[7]++]; 
     }
     
     ADD() {
@@ -96,13 +100,18 @@ class CPU {
     }
     
     CALL() {
-        this.PUSH();
+        // this.reg[7]--;
+        // this.ram[this.reg[7]] = this.PC + 2;
+        this.PUSH(this.PC + 2);
         this.PC = this.reg[this.operandA];
         this.PCmoved = true;
     }
 
     RET() {
+        // this.PC = this.ram[this.reg[7]];
+        // this.reg[7]++;
         this.PC = this.POP();
+        this.PCmoved = true;
     }
     /**
      * Advances the CPU one cycle
@@ -126,7 +135,8 @@ class CPU {
         
         // !!! IMPLEMENT ME
         //const category = (IR & 0b11000) >> 3;
-        const instruction = (IR & 0b11111);
+        
+        
         
 
         // Execute the instruction. Perform the actions for the instruction as
@@ -137,19 +147,23 @@ class CPU {
             0: function() {
                 //do nothing
             },
-            1: () => this.stopClock(),
-            3: () => this.PRN(),
-            0b11001: () => this.LDI(),
-            0b1000: () => this.ADD(),
-            0b1010: () => this.AND(),
-            0b1010: () => this.MUL(),
-            0b01100: () => this.POP(),
-            0b01101: () => this.PUSH(),
-            0b01000: () => this.CALL(),
-            0b01001: () => this.RET(),
+            0b00000001: () => this.stopClock(),
+            0b01000011: () => this.PRN(),
+            0b10011001: () => this.LDI(),
+            0b10101000: () => this.ADD(),
+            0b10110011: () => this.AND(),
+            0b10101010: () => this.MUL(),
+            0b01001100: () => this.POP(),
+            0b01001101: () => this.PUSH(),
+            0b01001000: () => this.CALL(),
+            0b00001001: () => this.RET(),
         };
-
-        table[instruction]();
+        
+        if (table[IR]){
+            table[IR]();
+        }
+        else
+            console.log(IR.toString(2));
 
         // Increment the PC register to go to the next instruction. Instructions
         // can be 1, 2, or 3 bytes long. Hint: the high 2 bits of the
