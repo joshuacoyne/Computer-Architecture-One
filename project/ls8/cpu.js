@@ -46,6 +46,17 @@ class CPU {
         clearInterval(this.clock);
     }
     
+    startInterruptClock() {
+        this.intClock = setInterval(() => {
+            this.interuptTimer();
+        }, 1000);
+    }
+
+    stopInterruptClock() {
+        cleaInterval(this.intClock);
+    }
+    
+
     /**
      * ALU functionality
      *
@@ -67,7 +78,7 @@ class CPU {
     //handler methods
     PUSH(item) {
         this.reg[7]--;
-        if (item)
+        if (item || item === 0)
             this.ram[this.reg[7]] = item;
         else
             this.ram[this.reg[7]] = this.reg[this.operandA];
@@ -77,6 +88,10 @@ class CPU {
         this.reg[this.operandA] = this.ram[this.reg[7]];
         
         return this.ram[this.reg[7]++]; 
+    }
+
+    rPOP() {
+        return this.ram[this.reg[7]++];
     }
     
     ADD() {
@@ -113,6 +128,27 @@ class CPU {
         this.PC = this.POP();
         this.PCmoved = true;
     }
+
+    ST() {
+        this.ram[this.reg[this.operandA]] = this.reg[this.operandB];
+    }
+
+    JMP() {
+        this.PC = this.operandA;
+        this.PCmoved = true;
+    }
+
+    IRET() {
+        for (let i = 6; i >= 0; i--)
+            this.reg[i] = this.rPOP();
+        // this.FL = this.POP();
+        this.PC = this.rPOP();
+        this.PCmoved = true;
+    }
+
+    PRA() {
+        console.log(String.fromCharCode(this.reg[this.operandA]));
+    }
     /**
      * Advances the CPU one cycle
      */
@@ -122,6 +158,31 @@ class CPU {
         // index into memory of the instruction that's about to be executed
         // right now.)
 
+        //check for interupts
+        
+        if (this.reg[6]) {
+            let maskedInterrupts = this.reg[6] & this.reg[5];
+            for (let i = 0; i < 8; i++) {
+                let interruptHappened = ((maskedInterrupts >> i) & 1) === 1;
+                if (interruptHappened) {
+                    this.reg[5] = 0;
+                    //this.reg[6] = this.reg[6] & ~Math.pow(2, i);
+                    this.reg[6] = 0;
+                    // start pushing
+                    this.PUSH(this.PC);
+                    //this.PUSH(this.FL)
+                    for (let j = 0; j <= 6; j++) {
+                        this.PUSH(this.reg[j]);
+                    }
+
+                    let vector = this.ram[255 - 7 - i];
+                    this.PC = vector;
+                }
+                    
+            }
+
+        }
+        
         // !!! IMPLEMENT ME
         const IR = this.ram.read(this.PC);
         this.PCmoved = false;
@@ -157,6 +218,10 @@ class CPU {
             0b01001101: () => this.PUSH(),
             0b01001000: () => this.CALL(),
             0b00001001: () => this.RET(),
+            0b10011010: () => this.ST(),
+            0b01010000: () => this.JMP(),
+            0b00001011: () => this.IRET(),
+            0b01000010: () => this.PRA(),
         };
         
         if (table[IR]){
@@ -175,6 +240,11 @@ class CPU {
         
         
         // !!! IMPLEMENT ME
+    }
+
+    interuptTimer() {
+        this.reg[6] = 1;
+        
     }
 }
 

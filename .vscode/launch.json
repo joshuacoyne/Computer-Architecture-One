@@ -11,7 +11,7 @@
             "name": "Launch Program",
             "program": "C:/Users/Josh/Documents/Projects/Computer-Architecture-One/project/ls8/ls8.js",
             "args": [
-                "C:/Users/Josh/Documents/Projects/Computer-Architecture-One/project/ls8/call.ls8"
+                "C:/Users/Josh/Documents/Projects/Computer-Architecture-One/project/ls8/interrupts.ls8"
             ]
         }
     ]
