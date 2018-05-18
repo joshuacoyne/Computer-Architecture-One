@@ -17,7 +17,7 @@ class CPU {
         this.reg[7] = 243;
         // Special-purpose registers
         this.PC = 0; // Program Counter
-
+        this.FL = 0; // Flag
         this.operandA = null;
         this.operandB = null;
         this.PCmoved = false;
@@ -53,7 +53,7 @@ class CPU {
     }
 
     stopInterruptClock() {
-        cleaInterval(this.intClock);
+        clearInterval(this.intClock);
     }
     
 
@@ -134,8 +134,23 @@ class CPU {
     }
 
     JMP() {
-        this.PC = this.operandA;
+        this.PC = this.reg[this.operandA];
         this.PCmoved = true;
+    }
+
+    JEQ() {
+        
+        if (this.FL & 0b1) {
+            this.PC = this.reg[this.operandA];
+            this.PCmoved = true;
+        }
+    }
+
+    JNE() {
+        if (!(this.FL & 0b1)) {
+            this.PC = this.reg[this.operandA];
+            this.PCmoved = true;
+        }
     }
 
     IRET() {
@@ -148,6 +163,29 @@ class CPU {
 
     PRA() {
         console.log(String.fromCharCode(this.reg[this.operandA]));
+    }
+
+    CMP() {
+        if (this.reg[this.operandA] > this.reg[this.operandB])
+            this.FL |= 0b010;
+        else
+            this.FL &= 0b101;
+            
+        if (this.reg[this.operandA] < this.reg[this.operandB])
+            this.FL |= 0b100;
+        else
+            this.FL &= 0b011;
+
+        if (this.reg[this.operandA] === this.reg[this.operandB])
+            this.FL |= 0b001;
+        else    
+            this.FL &= 0b110;
+
+    }
+
+    HLT() {
+        this.stopClock();
+        this.stopInterruptClock();
     }
     /**
      * Advances the CPU one cycle
@@ -208,7 +246,7 @@ class CPU {
             0: function() {
                 //do nothing
             },
-            0b00000001: () => this.stopClock(),
+            0b00000001: () => this.HLT(),
             0b01000011: () => this.PRN(),
             0b10011001: () => this.LDI(),
             0b10101000: () => this.ADD(),
@@ -222,6 +260,9 @@ class CPU {
             0b01010000: () => this.JMP(),
             0b00001011: () => this.IRET(),
             0b01000010: () => this.PRA(),
+            0b10100000: () => this.CMP(),
+            0b01010001: () => this.JEQ(),
+            0b01010010: () => this.JNE(),
         };
         
         if (table[IR]){
