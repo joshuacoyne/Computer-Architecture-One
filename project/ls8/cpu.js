@@ -156,7 +156,7 @@ class CPU {
     IRET() {
         for (let i = 6; i >= 0; i--)
             this.reg[i] = this.rPOP();
-        // this.FL = this.POP();
+        this.FL = this.POP();
         this.PC = this.rPOP();
         this.PCmoved = true;
     }
@@ -204,11 +204,11 @@ class CPU {
                 let interruptHappened = ((maskedInterrupts >> i) & 1) === 1;
                 if (interruptHappened) {
                     this.reg[5] = 0;
-                    //this.reg[6] = this.reg[6] & ~Math.pow(2, i);
-                    this.reg[6] = 0;
+                    this.reg[6] = this.reg[6] & ~Math.pow(2, i);
+                    //this.reg[6] = 0;
                     // start pushing
                     this.PUSH(this.PC);
-                    //this.PUSH(this.FL)
+                    this.PUSH(this.FL)
                     for (let j = 0; j <= 6; j++) {
                         this.PUSH(this.reg[j]);
                     }
